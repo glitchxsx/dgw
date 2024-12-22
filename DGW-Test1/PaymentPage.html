@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Page</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="PaymentPage.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container text-center">
+        <h3 class="mb-4">Payment Management</h3>
+        <div class="d-flex flex-wrap justify-content-center mb-4">
+            <!-- Action Buttons -->
+            <button id="back" class="btn btn-outline-secondary mx-2">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <button id="get-all-payments" class="btn btn-custom mx-2">
+                <i class="fas fa-list-alt"></i> Get All Payments
+            </button>
+            <button id="update-payment" class="btn btn-outline-custom mx-2">
+                <i class="fas fa-edit"></i> Update Payment
+            </button>
+            <button id="make-payment" class="btn btn-custom mx-2">
+                <i class="fas fa-plus-circle"></i> Add New Payment
+            </button>
+            <button id="get-payment-id" class="btn btn-outline-custom mx-2">
+                <i class="fas fa-id-card"></i> Get by Payment ID
+            </button>
+            <button id="get-user-id" class="btn btn-custom mx-2">
+                <i class="fas fa-user"></i> Get by User ID
+            </button>
+        </div>
+
+        <!-- Display Payments List -->
+        <div id="payments-list" class="container">
+            <!-- Payments will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FontAwesome JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script>
+        // Back button functionality
+        document.getElementById('back').addEventListener('click', function () {
+            alert('Back button clicked. Redirecting...');
+            window.history.back();
+        });
+
+        // Add New Payment
+document.getElementById('make-payment').addEventListener('click', function () {
+    const userId = prompt('Enter User ID:');
+    if (!userId) {
+        alert('User ID is required.');
+        return;
+    }
+
+    const amount = prompt('Enter Amount:');
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+        alert('Please enter a valid amount.');
+        return;
+    }
+
+    const paymentMethod = prompt('Enter Payment Method (e.g., Credit_Card, Debit_Card):');
+    if (!paymentMethod) {
+        alert('Payment Method is required.');
+        return;
+    }
+
+    const transactionType = prompt('Enter Transaction Type (e.g., CREDITED_TO_WALLET, DEBITED_FROM_WALLET):');
+    if (!transactionType) {
+        alert('Transaction Type is required.');
+        return;
+    }
+
+    const paymentStatus = prompt('Enter Payment Status (e.g., Success, Pending):');
+    if (!paymentStatus) {
+        alert('Payment Status is required.');
+        return;
+    }
+
+    // Prepare the payment data to send in the request body
+    const paymentData = {
+        userId: parseInt(userId), // Ensure it's an integer
+        amount: parseFloat(amount), // Ensure it's a floating-point number
+        paymentMethod: paymentMethod.toUpperCase(), // Convert to uppercase to match backend requirements
+        transactionType: transactionType.toUpperCase(), // Convert to uppercase to match backend requirements
+        paymentStatus: paymentStatus.toUpperCase() // Convert to uppercase to match backend requirements
+    };
+
+    // Send the POST request to add the payment
+    fetch('http://localhost:8080/api/v1/payments/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+    })
+    .then((response) => {
+        if (!response.ok) throw new Error('Failed to add payment.');
+        return response.json();
+    })
+    .then((data) => {
+        alert('Payment added successfully: ' + JSON.stringify(data));
+    })
+    .catch((error) => {
+        console.error('Error adding payment:', error);
+        alert('Error adding payment. Check the console for details.');
+            });
+        });
+
+        // Fetch All Payments
+        document.getElementById('get-all-payments').addEventListener('click', function () {
+            fetch('http://localhost:8080/api/v1/payments')
+                .then((response) => {
+                    if (!response.ok) throw new Error('Failed to fetch payments.');
+                    return response.json();
+                })
+                .then((data) => {
+                    const paymentsContainer = document.getElementById('payments-list');
+                    paymentsContainer.innerHTML = '';  // Clear previous data
+
+                    if (data && data.length > 0) {
+                        data.forEach(payment => {
+                            const paymentElement = document.createElement('div');
+                            paymentElement.classList.add('payment-item');
+                            paymentElement.innerHTML = `
+                                <h5>Payment ID: ${payment.paymentId}</h5>
+                                <p>User ID: ${payment.user.userId}</p>
+                                <p>User Name: ${payment.user.name}</p>
+                                <p>User Email: ${payment.user.email}</p>
+                                <p>Address: ${payment.user.address.street}, ${payment.user.address.city}, ${payment.user.address.state}, ${payment.user.address.country}, ${payment.user.address.postalCode}</p>
+                                <p>Balance: ₹${payment.user.balance}</p>
+                                <p>Amount: ₹${payment.amount}</p>
+                                <p>Payment Method: ${payment.paymentMethod}</p>
+                                <p>Transaction Type: ${payment.transactionType}</p>
+                                <p>Payment Status: ${payment.paymentStatus}</p>
+                                <p>Created At: ${new Date(payment.createdAt).toLocaleString()}</p>
+                            `;
+                            paymentsContainer.appendChild(paymentElement);
+                        });
+                    } else {
+                        paymentsContainer.innerHTML = '<p>No payments found.</p>';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error fetching payments:', error);
+                    alert('Error fetching payments. Check the console for details.');
+                });
+        });
+
+        // Update Payment
+        document.getElementById('update-payment').addEventListener('click', function () {
+            const paymentId = prompt('Enter Payment ID to update:');
+            if (!paymentId) {
+                alert('Payment ID is required.');
+                return;
+            }
+
+            const updatedAmount = prompt('Enter new Amount:');
+            if (!updatedAmount || isNaN(updatedAmount) || parseFloat(updatedAmount) <= 0) {
+                alert('Please enter a valid amount.');
+                return;
+            }
+
+            const updatedPaymentMethod = prompt('Enter new Payment Method (e.g., CREDIT_CARD, DEBIT_CARD):');
+            if (!updatedPaymentMethod) {
+                alert('Payment Method is required.');
+                return;
+            }
+
+            const updatedData = {
+                amount: parseFloat(updatedAmount),
+                paymentMethod: updatedPaymentMethod.toUpperCase() // Ensure it's in uppercase for backend validation
+            };
+
+            fetch(`http://localhost:8080/api/v1/payments/${paymentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData),
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error('Failed to update payment.');
+                return response.json();
+            })
+            .then((data) => {
+                alert('Payment updated successfully: ' + JSON.stringify(data));
+            })
+            .catch((error) => {
+                console.error('Error updating payment:', error);
+                alert('Error updating payment. Check the console for details.');
+            });
+        });
+
+        // Get Payment by ID
+        document.getElementById('get-payment-id').addEventListener('click', function () {
+            const paymentId = prompt('Enter Payment ID:');
+            if (!paymentId) {
+                alert('Payment ID is required.');
+                return;
+            }
+
+            fetch(`http://localhost:8080/api/v1/payments/${paymentId}`)
+                .then((response) => {
+                    if (!response.ok) throw new Error('Failed to fetch payment.');
+                    return response.json();
+                })
+                .then((data) => {
+                    if (!data) {
+                        alert('Payment not found.');
+                        return;
+                    }
+
+                    // Show the payment details
+                    const paymentsContainer = document.getElementById('payments-list');
+                    paymentsContainer.innerHTML = '';  // Clear previous data
+
+                    const paymentElement = document.createElement('div');
+                    paymentElement.classList.add('payment-item');
+                    paymentElement.innerHTML = `
+                        <h5>Payment ID: ${data.paymentId}</h5>
+                        <p>User ID: ${data.user.userId}</p>
+                        <p>Amount: ₹${data.amount}</p>
+                        <p>Payment Method: ${data.paymentMethod}</p>
+                        <p>Status: ${data.paymentStatus}</p>
+                    `;
+                    paymentsContainer.appendChild(paymentElement);
+
+                    alert('Fetched payment successfully.');
+                })
+                .catch((error) => {
+                    console.error('Error fetching payment:', error);
+                    alert('Error fetching payment. Check the console for details.');
+                });
+        });
+
+       // Get Payments by User ID
+document.getElementById('get-user-id').addEventListener('click', function () {
+    const userId = prompt('Enter User ID:');
+    if (!userId) {
+        alert('User ID is required.');
+        return;
+    }
+
+    fetch(`http://localhost:8080/api/v1/payments/by_user/${userId}`)
+        .then((response) => {
+            if (!response.ok) {
+                return response.json().then((errorData) => {
+                    console.error('Error response:', errorData);
+                    throw new Error(`Failed to fetch payments: ${errorData.message || 'Unknown error'}`);
+                });
+            }
+            return response.json();
+        })
+        .then((data) => {
+            const paymentsContainer = document.getElementById('payments-list');
+            paymentsContainer.innerHTML = '';  // Clear previous data
+
+            // Check if the response contains payment data
+            if (data) {
+                // Handle the case for a single payment object
+                const paymentElement = document.createElement('div');
+                paymentElement.classList.add('payment-item');
+                paymentElement.innerHTML = `
+                    <h5>Payment ID: ${data.paymentId}</h5>
+                    <p>User ID: ${data.user.userId}</p>
+                    <p>User Name: ${data.user.name}</p>
+                    <p>User Email: ${data.user.email}</p>
+                    <p>Address: ${data.user.address.street}, ${data.user.address.city}, ${data.user.address.state}, ${data.user.address.country}, ${data.user.address.postalCode}</p>
+                    <p>Balance: ₹${data.user.balance}</p>
+                    <p>Amount: ₹${data.amount}</p>
+                    <p>Payment Method: ${data.paymentMethod}</p>
+                    <p>Transaction Type: ${data.transactionType}</p>
+                    <p>Payment Status: ${data.paymentStatus}</p>
+                    <p>Created At: ${new Date(data.createdAt).toLocaleString()}</p>
+                `;
+                paymentsContainer.appendChild(paymentElement);
+            } else {
+                paymentsContainer.innerHTML = '<p>No payments found for this user.</p>';
+            }
+        })
+        .catch((error) => {
+            console.error('Error fetching payments by user ID:', error);
+            alert('Error fetching payments. Check the console for details.');
+        });
+});
+
+    </script>
+
+</body>
+
+</html>

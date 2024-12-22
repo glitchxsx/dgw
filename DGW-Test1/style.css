@@ -1,0 +1,64 @@
+body {
+    background: url('https://www.ruffalonl.com/wp-content/uploads/2022/03/CWarren_DigitalWallet_1200.jpg') no-repeat center center fixed;
+    background-size: cover;
+    background-attachment: fixed;
+    background-color: #f4f4f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    text-align: center;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.3); /* Semi-transparent background for better readability */
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.container h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #151d24;
+}
+
+.container p {
+    font-size: 1.1rem;
+    color: #1c2627;
+    margin-bottom: 30px;
+}
+
+.btn-custom {
+    background-color: #7f69ef;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 50px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.btn-custom:hover {
+    background-color: #7f69ef;
+}
+
+.btn-outline-secondary {
+    color: white;
+    border-color: #7f69ef;
+    font-weight: bold;
+    border-radius: 50px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #7f69ef;
+    color: #fff;
+}
+
+.d-grid .btn {
+    margin-top: 10px;
+}

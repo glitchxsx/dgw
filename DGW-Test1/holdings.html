@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Gold Holdings</title>
+    <!-- Bootstrap CSS for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h3>Virtual Gold Holdings</h3>
+        <div class="d-flex mb-3">
+            <button class="btn btn-outline-primary" onclick="getAllHoldings()">
+                <i class="fas fa-list-alt"></i> Get All Holdings
+            </button>
+        </div>
+
+        <!-- Table to display holdings -->
+        <div id="holdingsTable"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FontAwesome JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1/virtual_gold_holding';  // Update with your backend URL
+
+        // Get all virtual gold holdings
+        function getAllHoldings() {
+            let page = 1;
+            let allHoldings = [];
+
+            function fetchPage(page) {
+                fetch(`${API_BASE_URL}?page=${page}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Fetched data:', data); // Debugging line to check the response
+
+                        // Ensure the response has the expected structure
+                        if (data && Array.isArray(data.data) && data.totalPages) {
+                            allHoldings = [...allHoldings, ...data.data];  // Append current page data to the allHoldings array
+
+                            // Check if we need to fetch the next page
+                            if (page < data.totalPages) {
+                                fetchPage(page + 1);  // Fetch the next page
+                            } else {
+                                displayHoldings(allHoldings);  // All pages fetched, display the data
+                            }
+                        } else {
+                            alert('No holdings found or response format is incorrect');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching holdings:', error);
+                        alert('Failed to fetch holdings');
+                    });
+            }
+
+            // Start fetching from page 1
+            fetchPage(page);
+        }
+
+        // Display the holdings data in a table format
+        function displayHoldings(holdings) {
+            const tableContainer = document.getElementById('holdingsTable');
+            let tableHTML = `
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Holding ID</th>
+                            <th>User Name</th>
+                            <th>User Email</th>
+                            <th>User Address</th>
+                            <th>Branch Vendor</th>
+                            <th>Branch Quantity</th>
+                            <th>Holding Quantity</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            if (holdings.length === 0) {
+                tableHTML += `<tr><td colspan="8" class="text-center">No holdings available.</td></tr>`;
+            } else {
+                holdings.forEach(holding => {
+                    const user = holding.user;
+                    const branch = holding.branch;
+                    const vendor = branch.vendor;
+
+                    tableHTML += `
+                        <tr>
+                            <td>${holding.holdingId}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>
+                                ${user.address.street}, ${user.address.city}, ${user.address.state} - ${user.address.postalCode}<br>
+                                ${user.address.country}
+                            </td>
+                            <td>${vendor.vendorName}</td>
+                            <td>${branch.quantity}</td>
+                            <td>${holding.quantity}</td>
+                            <td>${new Date(holding.createdAt).toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            tableHTML += `</tbody></table>`;
+            tableContainer.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>
